@@ -94,7 +94,7 @@ def fetch_data():
             print("Req for Profile data failed failed (" + str(r.status_code) + ": " + r.reason + "): " + r.text)
             return False
 
-        sc = None
+        sc = None # will eventually implement fetching secret data as well
         
         try:
             res = res['profile']['members'][player['uuid']]
