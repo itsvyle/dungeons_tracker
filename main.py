@@ -11,18 +11,24 @@ DB_AUTH=os.environ['DB_AUTH']
 UUID_ENDPOINT="https://api.mojang.com/users/profiles/minecraft/"
 DATABASE_URL="https://www.chassereau.fr/web/db.php"
 TRACKED_PLAYERS = [
-    {"ign": "shiningshadow777","profile": "Pineapple","profile_id": "5b22f04c-6eda-424d-837d-19cf46c61795"},
-    {"ign": "","profile": ""},
-    {"ign": "","profile": ""},
-    {"ign": "","profile": ""},
-    {"ign": "","profile": ""},
-    {"ign": "","profile": ""},
-    {"ign": "","profile": ""},
-    {"ign": "","profile": ""},
+    {"ign": "shiningshadow777","profile": "pineapple","profile_id": "5b22f04c-6eda-424d-837d-19cf46c61795"},
+    {"ign": "TNTOJ","profile": "apple","profile_id": "8cddfad0-ad7d-4d8b-a37b-5e0230552f3c"},
+    {"ign": "Splatingo","profile": "pear","profile_id": "4be44f73-119f-4592-9bac-d6ace167d412"},
+    {"ign": "oAesthetic","profile": "kiwi","profile_id": "e480cc90-c910-4454-8b03-d20346b715bf"},
+    {"ign": "Spooky_Possum","profile": "lemon","profile_id": "f7e6e24f-6c3e-45b1-89ca-f52921f2fa4f"},
+    {"ign": "Iskipsecrets","profile": "papaya","profile_id": "8e7282e2-3e35-459c-b79f-d3547889d3e5"},
+    {"ign": "GorillagirlSyzee","profile": "lemon","profile_id": "2e4cc63a-b5c5-4b97-9fd3-4d479e3caef8"},
+    {"ign": "X1VK","profile": "kiwi","profile_id": "3409c1fa-21ad-4369-95ab-e03b256cbea7"},
+    {"ign": "Genade","profile": "pomegranate","profile_id": "8e80245e-7c09-4d4d-8f8e-39321084b58b"}
 ]
 DEFAULT_INTERVAL = 60*30 # half an hour
 actual_interval = DEFAULT_INTERVAL
 active_tries = 0
+
+def stopInstance(): # sys.exit doesn't seem to work...
+    print("Exited instance")
+    while True:
+        time.sleep(60)
 
 def HYPIXEL_API_REQ(path):
     return requests.get(API_URI+path,timeout=30,headers={"API-Key": HYPIXEL_API_KEY})
@@ -31,7 +37,7 @@ for player in TRACKED_PLAYERS:
     r = requests.get(UUID_ENDPOINT+player['ign'],timeout = 30,allow_redirects=False)
     if not r.ok:
         print("Req for UUID failed (" + str(r.status_code) + ": " + r.reason + "): " + r.text)
-        sys.exit()
+        stopInstance()
     res = json.loads(r.text)
     try:
         player['uuid'] = res["id"]
@@ -41,23 +47,24 @@ for player in TRACKED_PLAYERS:
 
 for player in TRACKED_PLAYERS:
     if "profile_id" in player:
-        print("Already have profile id for " + player['ign'] + ": " + player['profile'])
-        continue
+        if player['profile_id'] != "":
+            print("Already have profile id for " + player['ign'] + ": " + player['profile'])
+            continue
     r = HYPIXEL_API_REQ("/skyblock/profiles?uuid=" + player["uuid"])
     if not r.ok:
         print("Req for profiles failed (" + str(r.status_code) + ": " + r.reason + "): " + r.text)
-        sys.exit()
+        stopInstance()
     res = json.loads(r.text)
     if not res['success']:
         print("Req for Profile id failed failed (" + str(r.status_code) + ": " + r.reason + "): " + r.text)
-        sys.exit()
+        stopInstance()
     for p in res['profiles']:
         if p['cute_name'].lower() == player['profile'].lower():
             player['profile_id'] = p['profile_id']
             break
     if "profile_id" not in player:
         print("Couldn't find profile '" + player['profile'] + "' for " + player['ign'])
-        sys.exit()
+        stopInstance()
     print("Found profile id for " + player['ign'] + ", it would be better to store it in the TRACKED_PLAYERS variable: " + player['profile_id'])
 
 print("TRACKED_PLAYERS: ",json.dumps(TRACKED_PLAYERS,indent=4))
@@ -71,6 +78,7 @@ def send_data(data):
 </commands>"""
     with open("sent_data.json", "w") as f:
         f.write(json.dumps(data,indent=4))
+    print("Successfully wrote the sent data to sent_data.json")
     r = requests.post(DATABASE_URL,data=xml,timeout=30,headers={"Authorization": DB_AUTH})
     if not r.ok:
         print("Req for sending data failed failed (" + str(r.status_code) + ": " + r.reason + "): " + r.text)
@@ -94,7 +102,9 @@ def fetch_data():
             print("Req for Profile data failed failed (" + str(r.status_code) + ": " + r.reason + "): " + r.text)
             return False
 
-        sc = None # will eventually implement fetching secret data as well
+        
+        
+        sc = None
         
         try:
             res = res['profile']['members'][player['uuid']]
@@ -119,11 +129,11 @@ def fetch_data():
 while True:
     if active_tries >= 3:
         print("Ran out of tries!")
-        sys.exit()
+        stopInstance()
     if not fetch_data():
         active_tries+=1
         actual_interval = 300 # try again 5 minutes later
-        print("Error fetching profile info")
+        print("Error fetching profile info, trying again in " + str(actual_interval) + " seconds")
     else:
         actual_interval = DEFAULT_INTERVAL
     print("---------------------------------------")
