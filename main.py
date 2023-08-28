@@ -25,7 +25,7 @@ DEFAULT_INTERVAL = 60*30 # half an hour
 actual_interval = DEFAULT_INTERVAL
 active_tries = 0
 
-def stopInstance(): # sys.exit doesn't seem to work...
+def stopInstance(): # sys.exit doesn't seem to work in certain environnements, but this should also work as it's a single thread program
     print("Exited instance")
     while True:
         time.sleep(60)
