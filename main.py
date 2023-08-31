@@ -9,7 +9,7 @@ API_URI = "https://api.hypixel.net"
 HYPIXEL_API_KEY=os.environ['HYPIXEL_API_KEY']
 DB_AUTH=os.environ['DB_AUTH']
 UUID_ENDPOINT="https://api.mojang.com/users/profiles/minecraft/"
-DATABASE_URL="https://www.chassereau.fr/web/db.php"
+DATABASE_URL="https://www.<my last name lo>.fr/web/db.php"
 TRACKED_PLAYERS = [
     {"ign": "shiningshadow777","profile": "pineapple","profile_id": "5b22f04c-6eda-424d-837d-19cf46c61795"},
     {"ign": "TNTOJ","profile": "apple","profile_id": "8cddfad0-ad7d-4d8b-a37b-5e0230552f3c"},
